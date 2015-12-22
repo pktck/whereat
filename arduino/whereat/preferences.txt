@@ -1,0 +1,13 @@
+board=arduino_due_x_dbg
+preproc.save_build_files=true
+programmer=arduino:avrispmkii
+run.display=0
+serial.databits=8
+serial.parity=N
+serial.port=/dev/ttyACM0
+serial.port.file=ttyACM0
+serial.stopbits=1
+target_package=arduino
+target_platform=sam
+upload.using=bootloader
+build.path=./build/
