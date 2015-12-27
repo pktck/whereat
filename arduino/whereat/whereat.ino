@@ -58,10 +58,15 @@ unsigned long timer;
 unsigned long pollTimer;
 const int ncs = 10;
 volatile byte pixels[PIXEL_COUNT];
+int i;
+byte frameReady;
 
 
 void setup() {
-    Serial.begin(115200);
+    SerialUSB.begin(115200);
+    while(!SerialUSB){
+        delay(1);
+    }
 
     pinMode (ncs, OUTPUT);
 
@@ -76,7 +81,7 @@ void setup() {
     adns_com_end(); // ensure that the serial port is reset
 
     initializeFrameCapture();
-    Serial.println("Whereat?");
+    SerialUSB.println("Whereat?");
     dispRegisters();
     delay(5000);
     initComplete=9;
@@ -160,12 +165,12 @@ void dispRegisters(void){
     for(rctr=0; rctr<4; rctr++){
         SPI.transfer(oreg[rctr]);
         delay(1);
-        Serial.println("---");
-        Serial.println(oregname[rctr]);
-        Serial.println(oreg[rctr],HEX);
+        SerialUSB.println("---");
+        SerialUSB.println(oregname[rctr]);
+        SerialUSB.println(oreg[rctr],HEX);
         regres = SPI.transfer(0);
-        Serial.println(regres,BIN);  
-        Serial.println(regres,HEX);  
+        SerialUSB.println(regres,BIN);  
+        SerialUSB.println(regres,HEX);  
         delay(1);
     }
     digitalWrite(ncs,HIGH);
@@ -180,20 +185,22 @@ int convTwosComp(int b){
     return b;
 }
 
-void loop() {
-    int i;
-    byte frameReady;
+void clearSerialReadBuffer(void){
+    while(SerialUSB.available() > 0){
+        SerialUSB.read();
+    }
+}
 
-    Serial.println("Starting loop()...");
+void loop() {
+    while(SerialUSB.read() != '\n'){
+        delay(1);
+    }
 
     startFrameCapture();
 
-    frameReady = isFrameReady();
-
-    Serial.print("Is frame ready? ");
-    Serial.println(frameReady, HEX);
-
-    Serial.println("Downloading pixels...");
+    while(!isFrameReady()){
+        delay(1);
+    }
 
     adns_com_begin();
     SPI.transfer(REG_Pixel_Burst);
@@ -202,24 +209,13 @@ void loop() {
     }
     adns_com_end();
 
-    Serial.println("...done!");
+    clearSerialReadBuffer();
 
-    Serial.println("Pixels:");
-    Serial.println("((");
+    SerialUSB.print("BEGIN_FRAME");
     for(i=0; i<PIXEL_COUNT; i++){
-        Serial.print(pixels[i]);
-        Serial.print(",");
-        if((i + 1) % 30 == 0){
-            Serial.println("),(");
-        }
-
+        SerialUSB.write(pixels[i]);
     }
-    Serial.println("))");
-    Serial.println("END");
-
-
-    delay(1000);
-    delay(1);
+    SerialUSB.print("END_FRAME");
 
 }
 
