@@ -1,8 +1,11 @@
+port = $(shell python get_prog_port.py)
+
 all: build/whereat.ino.bin
 
 upload: build/whereat.ino.bin
-	stty -F /dev/ttyACM0 speed 1200 cs8 -cstopb -parenb
-	/home/pktck/.arduino15/packages/arduino/tools/bossac/1.6.1-arduino/bossac -i --port=ttyACM0 -U false -e -w -v -b /home/pktck/whereat/arduino/whereat/./build/whereat.ino.bin -R
+	echo Port: $(port)
+	stty -F /dev/$(port) speed 1200 cs8 -cstopb -parenb
+	/home/pktck/.arduino15/packages/arduino/tools/bossac/1.6.1-arduino/bossac -i --port=$(port) -U false -e -w -v -b /home/pktck/whereat/arduino/whereat/./build/whereat.ino.bin -R
 
 build/whereat.ino.bin: whereat.ino
 	make clean
